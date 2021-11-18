@@ -1,0 +1,55 @@
+---
+title: "lab5"
+author: "wenhui li"
+date: "11/17/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## 1
+```{r}
+acc <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/accident.csv", stringsAsFactors = FALSE)
+per <- read.csv("https://raw.githubusercontent.com/xdaiISU/ds202materials/master/hwlabs/fars2017/person.csv", stringsAsFactors = FALSE)
+library(dplyr)
+d1 <- filter(per, INJ_SEV == 4)
+```
+
+## 2
+```{r}
+dangermake <- per %>% na.omit(MAKE) %>% group_by(MAKE,STATE) %>% count %>% group_by(STATE) %>% filter(n==max(n))
+```
+
+## 3
+```{r}
+library(tidyverse)
+states <- map_data("state")
+glcs <- readxl::read_xlsx('FRPP_GLC_-_United_StatesNov42021.xlsx')
+glcs <- glcs %>% mutate(STATE=as.numeric(`State Code`))
+d3 <- dangermake %>% left_join(glcs%>%select('STATE','State Name'), by = "STATE") %>% rename(region = 'State Name')
+states %>% ggplot(aes(x= long, y= lat)) + geom_polygon(aes(group=group))
+```
+
+## 4
+```{r}
+d4 <- left_join(acc,per,by=c("STATE","COUNTY","DAY","MONTH","HOUR","MINUTE","ST_CASE","VE_FORMS","RUR_URB","FUNC_SYS","HARM_EV","MAN_COLL","SCH_BUS"))
+```
+
+## 5
+```{r}
+weekday <- d4 %>% group_by(DAY_WEEK) %>% count
+view(weekday)
+hour <- d4 %>% group_by(HOUR) %>% count
+view(hour)
+sex <- d4 %>% group_by(SEX) %>% count
+view(sex)
+```
+
+According to the FARS manual, I found that more accidents are occur on Saturday, and less on Tuesday. In one day, 18:00 is the time when more accidents occur. Male are more easy to get into a accient than female.
+
+## 6
+```{r}
+df6 <- per %>% filter(INJ_SEV == 4)%>% group_by(COUNTY) %>% summarize(totdeath=sum(INJ_SEV)/4)
+```
